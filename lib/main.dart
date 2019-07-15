@@ -32,13 +32,15 @@ class MyApp extends StatelessWidget {
           return MaterialApp(
             supportedLocales: const [Locale('en')],
             home: Tabs(),
-            initialRoute: '/',
+            initialRoute: '/blue',
             onGenerateRoute: onGenerateRoute,
             theme: ThemeData(
               brightness: stateModel.walletTheme.brightness,
               appBarTheme: AppBarTheme(
-                color: stateModel.walletTheme.appBarbackColor,
-              ),
+                  // color: stateModel.walletTheme.appBarbackColor,
+                  color: stateModel.walletTheme.brightness == Brightness.dark
+                      ? Colors.black12
+                      : Colors.cyan),
             ),
           );
         },

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nbc_wallet/pages/blue/BluePage.dart';
 import 'package:nbc_wallet/pages/tran/qrcode.dart';
 import 'package:nbc_wallet/pages/tran/recordpage.dart';
 import 'package:nbc_wallet/pages/tran/scanfcode.dart';
@@ -13,6 +14,7 @@ final _routes = {
   '/txnDetailsPage': (context) => TxnDetailsPage(),
   '/qrcode': (context) => QRCodePage(),
   '/scanfcode':(context)=>ScanfCodePage(),
+  '/blue':(context)=>BluePage(),
 };
 
 var onGenerateRoute = (RouteSettings settings) {

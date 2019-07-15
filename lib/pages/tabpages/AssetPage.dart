@@ -4,7 +4,6 @@ import 'package:flutter/widgets.dart';
 import 'package:nbc_wallet/api/provider/stateModel.dart';
 import 'package:provider/provider.dart';
 
-
 Widget buildListData(BuildContext context, String titleItem, Icon iconItem,
     String subTitleItem) {
   return new ListTile(

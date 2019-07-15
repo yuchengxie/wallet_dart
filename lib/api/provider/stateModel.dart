@@ -16,7 +16,8 @@ class StateModel with ChangeNotifier {
   String get tranState => _tranState;
 
   //theme
-  WalletTheme _walletTheme=WalletTheme(brightness: Brightness.light,appBarbackColor: Colors.cyan);
+  // WalletTheme _walletTheme=WalletTheme(brightness: Brightness.light,appBarbackColor: Colors.cyan);
+  WalletTheme _walletTheme=WalletTheme(brightness: Brightness.dark);
   WalletTheme get walletTheme => _walletTheme;
 
   void updateAddr(value) {
@@ -52,6 +53,9 @@ class StateModel with ChangeNotifier {
 
 class WalletTheme {
   Brightness brightness=Brightness.dark;
-  Color appBarbackColor=Colors.cyan;
-  WalletTheme({this.brightness,this.appBarbackColor});
+  // Color appBarbackColor=Colors.white;
+  // Color appBarbackColor=null;
+  // WalletTheme({this.brightness,this.appBarbackColor});
+  // WalletTheme({this.brightness,this.appBarbackColor});
+  WalletTheme({this.brightness});
 }
