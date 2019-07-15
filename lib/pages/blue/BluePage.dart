@@ -3,9 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:nbc_wallet/api/provider/stateModel.dart';
 import 'package:provider/provider.dart';
 import 'package:toast/toast.dart';
+import '../../api/bluetooth/blueservice.dart';
 
-String appSelectID = "D196300077130010000000020101";
-String pinCode = "0020000003000000";
 TextEditingController bleNameController;
 TextEditingController pinCodeController;
 
@@ -16,15 +15,13 @@ class BluePage extends StatefulWidget {
 }
 
 class _BluePageState extends State<BluePage> {
-  static const MethodChannel methodChannel = MethodChannel('hzf.bluetooth');
-  static const EventChannel eventChannel = EventChannel('hzf.bluetoothState');
   String _connectState;
 
   Future<void> _connectBlueTooth(String a, String b) async {
     String connectState = '';
     try {
       final String s =
-          await methodChannel.invokeMethod('connectBlueTooth', [a, b]);
+          await BlueToothService.methodChannel.invokeMethod('connectBlueTooth', [a, b]);
       this._showToast("connectBlueTooth返回$s", duration: 3, gravity: Toast.TOP);
     } on PlatformException {
       connectState = 'bluetooth connect error';
@@ -38,7 +35,7 @@ class _BluePageState extends State<BluePage> {
     String connectState = '';
     try {
       final int result =
-          await methodChannel.invokeMethod('disConnectBlueTooth');
+          await BlueToothService.methodChannel.invokeMethod('disConnectBlueTooth');
       connectState = '连接结果:$result';
     } on PlatformException {
       connectState = 'bluetooth connect error';
@@ -50,14 +47,14 @@ class _BluePageState extends State<BluePage> {
 
   Future<void> _selectApp(String appSelectID) async {
     try {
-      String s = await methodChannel.invokeMethod('selectApp', [appSelectID]);
+      String s = await BlueToothService.methodChannel.invokeMethod('selectApp', [appSelectID]);
       this._showToast("$s", duration: 3, gravity: Toast.TOP);
     } on PlatformException {}
   }
 
   Future<void> _verifPIN(String pincode) async {
     try {
-      String s = await methodChannel.invokeMethod('verifPIN', [pincode]);
+      String s = await BlueToothService.methodChannel.invokeMethod('verifPIN', [pincode]);
       print('接收到返回s:$s');
       this._showToast("$s", duration: 3, gravity: Toast.TOP);
     } on PlatformException {}
@@ -65,16 +62,16 @@ class _BluePageState extends State<BluePage> {
 
   Future<void> _sign(String payload) async {
     try {
-      String s = await methodChannel.invokeMethod('sign', [payload]);
+      String s = await BlueToothService.methodChannel.invokeMethod('sign', [payload]);
     } on PlatformException {}
   }
 
   Future<void> _verifySign(String signStr) async {
     try {
-      String s = await methodChannel.invokeMethod('verifySign', signStr);
+      String s = await BlueToothService.methodChannel.invokeMethod('verifySign', signStr);
     } on PlatformException {}
   }
-
+  
   void _showToast(String msg, {int duration, int gravity}) {
     Toast.show(msg, context, duration: duration, gravity: gravity);
   }
@@ -88,7 +85,7 @@ class _BluePageState extends State<BluePage> {
     pinCodeController.text = "123456";
     this._connectState = '请连接蓝牙';
     print('state:${this._connectState}');
-    eventChannel.receiveBroadcastStream().listen(_onEvent, onError: _onError);
+    BlueToothService.eventChannel.receiveBroadcastStream().listen(_onEvent, onError: _onError);
   }
 
   _onEvent(Object event) {

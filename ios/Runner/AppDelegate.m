@@ -223,7 +223,5 @@ didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
     return string;
 }
 
-
-
 @end
 

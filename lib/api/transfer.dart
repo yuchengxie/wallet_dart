@@ -5,7 +5,7 @@ import 'package:crypto/src/sha256.dart';
 import 'package:bs58check/bs58check.dart' as bs58check;
 import 'package:buffer/buffer.dart';
 import 'package:http/http.dart' as http;
-import 'package:nbc_wallet/api/server/net.dart';
+// import './bluetooth/blueApi.dart';
 import './pack/pack.dart';
 import './pack/unpack.dart';
 import './model/jsonEntity.dart';
@@ -78,7 +78,8 @@ Future<MakeSheetResult> transfer(pay_to, from_uocks) async {
   }
 
   //网络获取钱包
-  _wallet = await getWallet();
+  // _wallet = await getWallet();
+  _wallet = await null;
   if (_wallet == null) {
     print('_wallet null');
     return null;
@@ -143,13 +144,15 @@ Future<MakeSheetResult> transfer(pay_to, from_uocks) async {
       print('>>> ready sign payload:${s}---${s.length}');
 
       //tee签名
-      TeeSign teeSign = await getSign(s);
+      // TeeSign teeSign = await getSign(s);
+      TeeSign teeSign = null;
       if (teeSign == null) {
         print('teeSign null');
         return null;
       }
       //验证签名
-      TeeVerifySign teeVerifySign = await verifySign(s, teeSign.msg);
+      // TeeVerifySign teeVerifySign = await verifySign(s, teeSign.msg);
+      TeeVerifySign teeVerifySign = null;
       if (teeVerifySign == null) {
         print('verify sign err,null');
         return null;
