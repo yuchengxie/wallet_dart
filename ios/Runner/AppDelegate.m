@@ -13,9 +13,12 @@
 const int BLUE_CONNCTED = 1;
 const int BLUE_DISCONNECTED = 0;
 const int BLUE_INIT = -1;
-NSString * BLUENOTCONNCTED=@"蓝牙未连接,请先连接蓝牙";
-NSString * BLUECONNECTEDSUCCESS=@"蓝牙连接成功";
-NSString * BLUEDISCONNECTED=@"蓝牙断开";
+//NSString * BLUENOTCONNCTED=@"蓝牙未连接,请先连接蓝牙";
+NSString * BLUENOTCONNCTED=@"-1";
+//NSString * BLUECONNECTEDSUCCESS=@"蓝牙连接成功";
+NSString * BLUECONNECTEDSUCCESS=@"1";
+//NSString * BLUEDISCONNECTED=@"蓝牙断开";
+NSString * BLUEDISCONNECTED=@"0";
 
 @implementation AppDelegate {
     FlutterEventSink _eventSink;
@@ -123,7 +126,7 @@ didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
     __block NSString* res=@"";
     dispatch_async(dispatch_get_global_queue(0, 0), ^{
         int code = [ikey selectApplet:appSelectID];
-        res = code ==0?@"success":@"failed";
+        res = code ==0?@"1":@"0";
         dispatch_semaphore_signal(sema);
     });
     dispatch_semaphore_wait(sema,DISPATCH_TIME_FOREVER);

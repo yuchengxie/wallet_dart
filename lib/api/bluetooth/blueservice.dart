@@ -10,31 +10,56 @@ const WEB_SERVER_ADDR = 'http://user1-node.nb-chain.net';
 // const FAILED = 0;
 // const TEENOTREADY = -1;
 String appSelectID = "D196300077130010000000020101";
-String pinCode = "0020000003000000";
+// String pinCode = "0020000003000000";
+MethodChannel methodChannel = MethodChannel('hzf.bluetooth');
+EventChannel eventChannel = EventChannel('hzf.bluetoothState');
 
-class BlueToothService {
-  static MethodChannel methodChannel = MethodChannel('hzf.bluetooth');
-  static EventChannel eventChannel = EventChannel('hzf.bluetoothState');
-
-  Future<bool> isBlueConncted() async {
-    return false;
+Future<String> connectBlueTooth(String bleName, String pinCode) async {
+  try {
+    String res = await methodChannel
+        .invokeMethod('connectBlueTooth', [bleName, pinCode]);
+    return res;
+  } on PlatformException {
+    return 'error';
   }
+}
 
-  Future<List<int>> transfer() async {
-    return null;
+Future<void> disConnectBlueTooth() async {
+  try {
+    methodChannel.invokeMethod('disConnectBlueTooth');
+  } on PlatformException {
+    return "error";
   }
+}
 
-  Future<bool> verifyPincode(String pinCode) async {
-    return false;
+Future<String> selectApp(String appSelectID) async {
+  try {
+    String res = await methodChannel.invokeMethod('selectApp', [appSelectID]);
+    return res;
+  } on PlatformException {
+    return 'error';
   }
+}
 
-  Future<List<int>> transmit(String cmd) async {
-    return null;
+Future<String> verifPIN(String pincode) async {
+  try {
+    String res = await methodChannel.invokeMethod('verifPIN', [pincode]);
+    return res;
+  } on PlatformException {
+    return 'error';
   }
+}
 
-  Future<TeeSign> sign(String payload) async {
-    return null;
-  }
+Future<List<int>> transfer() async {
+  return null;
+}
+
+Future<List<int>> transmit(String cmd) async {
+  return null;
+}
+
+Future<TeeSign> sign(String payload) async {
+  return null;
 }
 
 // Future<TeeWallet> getWallet() async {

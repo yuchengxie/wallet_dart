@@ -4,9 +4,11 @@ import 'package:nbc_wallet/api/provider/stateModel.dart';
 import 'package:provider/provider.dart';
 import 'package:toast/toast.dart';
 import '../../api/bluetooth/blueservice.dart';
+import '../../api/bluetooth/formatcmd.dart';
 
 TextEditingController bleNameController;
 TextEditingController pinCodeController;
+TextEditingController pinCodeVerifyController;
 
 class BluePage extends StatefulWidget {
   BluePage({Key key}) : super(key: key);
@@ -16,64 +18,56 @@ class BluePage extends StatefulWidget {
 
 class _BluePageState extends State<BluePage> {
   String _connectState;
-
-  Future<void> _connectBlueTooth(String a, String b) async {
-    String connectState = '';
-    try {
-      final String s =
-          await BlueToothService.methodChannel.invokeMethod('connectBlueTooth', [a, b]);
-      this._showToast("connectBlueTooth返回$s", duration: 3, gravity: Toast.TOP);
-    } on PlatformException {
-      connectState = 'bluetooth connect error';
-    }
+  _connectBlueTooth(String bleName, String pinCode) async {
+    String connectState = await connectBlueTooth(bleName, pinCode);
     setState(() {
       this._connectState = connectState;
     });
   }
 
-  Future<void> _disConnectBlueTooth() async {
-    String connectState = '';
-    try {
-      final int result =
-          await BlueToothService.methodChannel.invokeMethod('disConnectBlueTooth');
-      connectState = '连接结果:$result';
-    } on PlatformException {
-      connectState = 'bluetooth connect error';
-    }
+  _disConnectBlueTooth() async {
+    disConnectBlueTooth();
     setState(() {
-      this._connectState = connectState;
+      this._connectState = '蓝牙断开';
     });
   }
 
-  Future<void> _selectApp(String appSelectID) async {
-    try {
-      String s = await BlueToothService.methodChannel.invokeMethod('selectApp', [appSelectID]);
-      this._showToast("$s", duration: 3, gravity: Toast.TOP);
-    } on PlatformException {}
+  _selectApp(String appSelectID) async {
+    String s = await selectApp(appSelectID);
+    s = s == '1' ? '选择应用成功' : '选择应用失败';
+    this._showToast("$s");
   }
 
-  Future<void> _verifPIN(String pincode) async {
-    try {
-      String s = await BlueToothService.methodChannel.invokeMethod('verifPIN', [pincode]);
-      print('接收到返回s:$s');
-      this._showToast("$s", duration: 3, gravity: Toast.TOP);
-    } on PlatformException {}
+  _verifPIN(String pinCode) async {
+    String s = '';
+    pinCode = formatPinCode(pinCode);
+    String res = await verifPIN(pinCode);
+    if (res != '1') s = '蓝牙未连接';
+    if (res == '9000') {
+      s = '密码验证成功';
+    } else if (res.substring(0, 3) == '63c') {
+      s = '密码不正确, 剩余输入次数: ' + res.substring(3);
+    } else {
+      s = '密码验证错误';
+    }
+    this._showToast("$s");
   }
 
-  Future<void> _sign(String payload) async {
-    try {
-      String s = await BlueToothService.methodChannel.invokeMethod('sign', [payload]);
-    } on PlatformException {}
-  }
+  _sign(String readySignStr) {}
+  // Future<void> _sign(String payload) async {
+  //   try {
+  //     String s = await methodChannel.invokeMethod('sign', [payload]);
+  //   } on PlatformException {}
+  // }
 
-  Future<void> _verifySign(String signStr) async {
-    try {
-      String s = await BlueToothService.methodChannel.invokeMethod('verifySign', signStr);
-    } on PlatformException {}
-  }
-  
+  // Future<void> _verifySign(String signStr) async {
+  //   try {
+  //     String s = await methodChannel.invokeMethod('verifySign', signStr);
+  //   } on PlatformException {}
+  // }
+
   void _showToast(String msg, {int duration, int gravity}) {
-    Toast.show(msg, context, duration: duration, gravity: gravity);
+    Toast.show(msg, context, duration: 2, gravity: Toast.BOTTOM);
   }
 
   @override
@@ -81,16 +75,18 @@ class _BluePageState extends State<BluePage> {
     super.initState();
     bleNameController = TextEditingController();
     pinCodeController = TextEditingController();
+    pinCodeVerifyController = TextEditingController();
     bleNameController.text = "BLESIM111111";
     pinCodeController.text = "123456";
+    pinCodeVerifyController.text = "000000";
     this._connectState = '请连接蓝牙';
     print('state:${this._connectState}');
-    BlueToothService.eventChannel.receiveBroadcastStream().listen(_onEvent, onError: _onError);
+    eventChannel.receiveBroadcastStream().listen(_onEvent, onError: _onError);
   }
 
   _onEvent(Object event) {
     setState(() {
-      _connectState = '$event';
+      _connectState = event == '1' ? '蓝牙连接成功' : '蓝牙断开';
     });
   }
 
@@ -104,7 +100,7 @@ class _BluePageState extends State<BluePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('蓝牙SIM'),
+        title: Text(this._connectState),
       ),
       body: Container(
         margin: EdgeInsets.all(10),
@@ -147,15 +143,6 @@ class _BluePageState extends State<BluePage> {
               },
             ),
             SizedBox(
-              height: 15,
-            ),
-            Text(
-              this._connectState,
-              style: TextStyle(
-                color: Colors.cyan,
-              ),
-            ),
-            SizedBox(
               height: 25,
             ),
             MOutlineButton(
@@ -164,10 +151,17 @@ class _BluePageState extends State<BluePage> {
                 this._selectApp(appSelectID);
               },
             ),
+            TextField(
+              controller: pinCodeVerifyController,
+              decoration: InputDecoration(
+                prefixIcon: Icon(Icons.bluetooth),
+                hintText: '请输入要验证的PIN码',
+              ),
+            ),
             MOutlineButton(
               title: "验证PIN码",
               onPressed: () {
-                this._verifPIN(pinCode);
+                this._verifPIN(pinCodeVerifyController.text.trim());
               },
             ),
             MOutlineButton(
