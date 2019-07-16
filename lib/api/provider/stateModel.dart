@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../bluetooth/blueservice.dart';
 
 class StateModel with ChangeNotifier {
   // String _recvAddr = '';
@@ -15,9 +16,25 @@ class StateModel with ChangeNotifier {
   String get lastUock => _lastUock;
   String get tranState => _tranState;
 
+  String _blueState = "0";
+  String get blueState => _blueState;
+
+  StateModel(){
+    eventChannel.receiveBroadcastStream().listen(_onEvent, onError: _onError);
+  }
+
+  _onEvent(Object event) {
+    _blueState=event;
+  }
+
+  _onError(Object error) {
+    _blueState='blue connect:unknow';
+  }
+
+
   //theme
   // WalletTheme _walletTheme=WalletTheme(brightness: Brightness.light,appBarbackColor: Colors.cyan);
-  WalletTheme _walletTheme=WalletTheme(brightness: Brightness.dark);
+  WalletTheme _walletTheme = WalletTheme(brightness: Brightness.dark);
   WalletTheme get walletTheme => _walletTheme;
 
   void updateAddr(value) {
@@ -52,7 +69,7 @@ class StateModel with ChangeNotifier {
 }
 
 class WalletTheme {
-  Brightness brightness=Brightness.dark;
+  Brightness brightness = Brightness.dark;
   // Color appBarbackColor=Colors.white;
   // Color appBarbackColor=null;
   // WalletTheme({this.brightness,this.appBarbackColor});

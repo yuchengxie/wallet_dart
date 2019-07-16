@@ -4,39 +4,57 @@
 #import "NZIKey.h"
 #import "NZSIMSDK.h"
 
+//@interface PseudoWallet:NSObject
+//@property (nonatomic, copy) NSString* pubAddr;
+//@property (nonatomic, copy) NSString* pubKey;
+//@property (nonatomic, copy) NSString* pubHash;
+//@end
+
 @interface AppDelegate()<NZSIMSDKDelegate>{
     NZSIMSDK *shareSdk;
     NZIKey *ikey;
 }
 @end
-
-const int BLUE_CONNCTED = 1;
-const int BLUE_DISCONNECTED = 0;
-const int BLUE_INIT = -1;
+NSString* const CMD_PUB_ADDR=@"80220200020000";
+NSString* const CMD_PUB_KEY=@"8022000000";
+NSString* const CMD_PUB_KEY_HASH=@"8022010000";
+//const int BLUE_CONNCTED = 1;
+//const int BLUE_DISCONNECTED = 0;
+//const int BLUE_INIT = -1;
 //NSString * BLUENOTCONNCTED=@"蓝牙未连接,请先连接蓝牙";
-NSString * BLUENOTCONNCTED=@"-1";
+//NSString * BLUENOTCONNCTED=@"-1";
 //NSString * BLUECONNECTEDSUCCESS=@"蓝牙连接成功";
-NSString * BLUECONNECTEDSUCCESS=@"1";
+NSString * BLUECONNECTED=@"1";
 //NSString * BLUEDISCONNECTED=@"蓝牙断开";
 NSString * BLUEDISCONNECTED=@"0";
 
 @implementation AppDelegate {
     FlutterEventSink _eventSink;
     FlutterViewController* controller;
-    int _blueToothState;
+    NSString* blueState;
+    NSString * pubAddr;
+    NSString * pubKey;
+    NSString * pubHash;
 }
 
 - (BOOL)application:(UIApplication*)application
 didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
     [GeneratedPluginRegistrant registerWithRegistry:self];
-    _blueToothState = BLUE_INIT;
+//    blueState = @"";
     controller =
     (FlutterViewController*)self.window.rootViewController;
     
     FlutterMethodChannel* bluetootheChannel = [FlutterMethodChannel
                                                methodChannelWithName:@"hzf.bluetooth"
                                                binaryMessenger:controller];
+    FlutterEventChannel *blueStateChnnel=[FlutterEventChannel eventChannelWithName:@"hzf.bluetoothState" binaryMessenger:controller];
+    [blueStateChnnel setStreamHandler:self];
+    
     __weak typeof(self) weakSelf = self;
+    
+    shareSdk=[NZSIMSDK shareSdk];
+    shareSdk.sim_delegate=self;
+    ikey=[[NZIKey alloc]init];
     
     [bluetootheChannel setMethodCallHandler:^(FlutterMethodCall* call,
                                               FlutterResult result) {
@@ -44,7 +62,7 @@ didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
         if([@"connectBlueTooth" isEqualToString:call.method]){
             NSString *bleName=call.arguments[0];
             NSString *pinCode=call.arguments[1];
-            [weakSelf connectBlueTooth:bleName :pinCode];
+            [shareSdk ConnectWithBleName:bleName andBleAuthCode:pinCode];
         }else if([@"disConnectBlueTooth" isEqualToString:call.method]){
             [weakSelf disConnectBlueTooth];
         }else if([@"transmit" isEqualToString:call.method]){
@@ -56,28 +74,7 @@ didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
             NSString * resSelect =[weakSelf selectApp:appSelectID];
             result(resSelect);
         }
-        
-        
-//        else if ([@"selectApp" isEqualToString:call.method]){
-//            NSString * appSelectID=call.arguments[0];
-//            NSString * resSelect =[weakSelf selectApp:appSelectID];
-//            result(resSelect);
-//        }else if ([@"verifPIN" isEqualToString:call.method]){
-//            NSString * strCode=call.arguments[0];
-//            NSString * resVerify= [weakSelf verifPIN:strCode];
-//            result(resVerify);
-//        }else if ([@"sign" isEqualToString:call.method]){
-//            NSString * signCmdHexStr=call.arguments[0];
-//            NSString * resSign=[weakSelf sign:signCmdHexStr];
-//            result(resSign);
-//        }
     }];
-    
-    FlutterEventChannel *blueStateChnnel=[FlutterEventChannel eventChannelWithName:@"hzf.bluetoothState" binaryMessenger:controller];
-    [blueStateChnnel setStreamHandler:self];
-    shareSdk=[NZSIMSDK shareSdk];
-    shareSdk.sim_delegate=self;
-    ikey=[[NZIKey alloc]init];
     
     return [super application:application didFinishLaunchingWithOptions:launchOptions];
 }
@@ -90,9 +87,15 @@ didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
 }
 
 - (void)sendBlueToothConnectStateEvent {
-    if (!_eventSink || _blueToothState==BLUE_INIT) return;
-    NSString * strState=_blueToothState == BLUE_CONNCTED? BLUECONNECTEDSUCCESS:BLUEDISCONNECTED;
-    _eventSink(strState);
+    if (!_eventSink) return;
+//    NSString * strState=_blueToothState == BLUE_CONNCTED? BLUECONNECTEDSUCCESS:BLUEDISCONNECTED;
+    NSDictionary *dic = [NSDictionary dictionaryWithObjectsAndKeys:
+                         blueState,@"state",
+                         pubAddr, @"pubAddr",
+                         pubKey, @"pubKey",
+                         pubHash,@"pubHash", nil ];
+    _eventSink(dic);
+//    _eventSink([strState]);
 }
 
 - (FlutterError*)onCancelWithArguments:(id)arguments {
@@ -102,17 +105,21 @@ didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
 }
 
 #pragma mark -bluetooth
-- (NSString*)connectBlueTooth: (NSString*)bleName :(NSString*) pinCode {
-    dispatch_semaphore_t sema =dispatch_semaphore_create(0);
-    __block NSString* res;
-    dispatch_async(dispatch_get_global_queue(0, 0), ^{
-        int code=[shareSdk ConnectWithBleName:bleName andBleAuthCode:pinCode];
-        res = code == 0? @"success": @"failed";
-        dispatch_semaphore_signal(sema);
-    });
-    dispatch_semaphore_wait(sema,DISPATCH_TIME_FOREVER);
-    return res;
-}
+//- (NSString*)connectBlueTooth: (NSString*)bleName :(NSString*) pinCode {
+//    dispatch_semaphore_t sema =dispatch_semaphore_create(0);
+//    __block NSString* res;
+//    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+//        int code=[shareSdk ConnectWithBleName:bleName andBleAuthCode:pinCode];
+//        res = code == 0? @"success": @"failed";
+//        dispatch_semaphore_signal(sema);
+//    });
+//    dispatch_semaphore_wait(sema,DISPATCH_TIME_FOREVER);
+//    return res;
+//}
+
+//-(void)connectBlueTooth: (NSString*)bleName :(NSString*) pinCode{
+//    [shareSdk ConnectWithBleName:bleName andBleAuthCode:pinCode];
+//}
 
 -(void)disConnectBlueTooth{
     dispatch_semaphore_t sema =dispatch_semaphore_create(0);
@@ -124,14 +131,14 @@ didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
 }
 
 -(Boolean)isBlueToothConnected{
-    if(_blueToothState==BLUE_CONNCTED) return true;
+    if(blueState==BLUECONNECTED) return true;
     return false;
 }
 
 //接口测试返回 其他代表失败//0代表成功
 -(NSString*)selectApp:(NSString *) appSelectID{
     NSLog(@"appSelectID: %@",appSelectID);
-    if(![self isBlueToothConnected]) return BLUENOTCONNCTED;
+    if(![self isBlueToothConnected]) return BLUEDISCONNECTED;
     dispatch_semaphore_t sema =dispatch_semaphore_create(0);
     __block NSString* res=@"";
     dispatch_async(dispatch_get_global_queue(0, 0), ^{
@@ -143,39 +150,8 @@ didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
     return res;
 }
 
-//-(NSString*)verifPIN:(NSString *)codeStr{
-//    if(![self isBlueToothConnected]) return BLUENOTCONNCTED;
-//    dispatch_semaphore_t sema =dispatch_semaphore_create(0);
-//    __block NSString* res=@"";
-//    NSData * d=[self convertHexStrToData:codeStr];
-//    NSLog(@"d: %@",d);
-//    dispatch_async(dispatch_get_global_queue(0, 0), ^{
-//        NSData *r=[shareSdk SendSynchronized:d];
-//        res=[self convertDataToHexStr:r];
-//        dispatch_semaphore_signal(sema);
-//    });
-//    dispatch_semaphore_wait(sema,DISPATCH_TIME_FOREVER);
-//    return res;
-//}
-//
-//-(NSString *)sign:(NSString*)signCmdHexStr{
-//    if(![self isBlueToothConnected]) return BLUENOTCONNCTED;
-//    dispatch_semaphore_t sema =dispatch_semaphore_create(0);
-//    __block NSString* res=@"";
-//    NSData * d = [self convertHexStrToData:signCmdHexStr];
-//    
-//    NSLog(@"d: %@",d);
-//    dispatch_async(dispatch_get_global_queue(0, 0), ^{
-//        NSData *r=[shareSdk SendSynchronized:d];
-//        res=[self convertDataToHexStr:r];
-//        dispatch_semaphore_signal(sema);
-//    });
-//    dispatch_semaphore_wait(sema,DISPATCH_TIME_FOREVER);
-//    return res;
-//}
-
 -(NSString*)transmit:(NSString *)sendStr{
-    if(![self isBlueToothConnected]) return BLUENOTCONNCTED;
+    if(![self isBlueToothConnected]) return BLUEDISCONNECTED;
     dispatch_semaphore_t sema =dispatch_semaphore_create(0);
     __block NSString* res=@"";
     NSData * d=[self convertHexStrToData:sendStr];
@@ -193,15 +169,20 @@ didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
 #pragma mark - NZBLESDK delegate
 -(void)didConnectSuc{
     dispatch_async(dispatch_get_main_queue(), ^{
-        _blueToothState=BLUE_CONNCTED;
+        blueState=BLUECONNECTED;
+        pubAddr=[self transmit:CMD_PUB_ADDR];
+        pubKey=[self transmit:CMD_PUB_KEY];
+        pubHash=[self transmit:CMD_PUB_KEY_HASH];
         [self sendBlueToothConnectStateEvent];
     });
 }
 
 -(void)didDisConnect {
-    NSLog(@"bluetooth disconnect!");
     dispatch_async(dispatch_get_main_queue(), ^{
-        _blueToothState=BLUE_DISCONNECTED;
+        blueState=BLUEDISCONNECTED;
+        pubAddr=@"";
+        pubKey=@"";
+        pubHash=@"";
         [self sendBlueToothConnectStateEvent];
     });
 }

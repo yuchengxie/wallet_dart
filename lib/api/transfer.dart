@@ -38,7 +38,7 @@ bool isQuery = true;
 
 void main() {
   // query_sheet('', '');
-  transfer('', '');
+  // transfer('', '');
 }
 
 Future<MakeSheetResult> transfer(pay_to, from_uocks) async {
@@ -75,7 +75,8 @@ Future<MakeSheetResult> transfer(pay_to, from_uocks) async {
     print('orgSheet null');
     return null;
   }
-  
+  //获取钱包
+  print("wallet: ${gPseudoWallet.pubAddr}");
 //   //网络获取钱包
 //   // _wallet = await getWallet();
 //   _wallet = await null;

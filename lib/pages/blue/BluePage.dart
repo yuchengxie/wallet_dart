@@ -4,11 +4,12 @@ import 'package:nbc_wallet/api/provider/stateModel.dart';
 import 'package:provider/provider.dart';
 import 'package:toast/toast.dart';
 import '../../api/bluetooth/blueservice.dart';
-import '../../api/bluetooth/formatcmd.dart';
 
 TextEditingController bleNameController;
 TextEditingController pinCodeController;
 TextEditingController pinCodeVerifyController;
+
+const String blueNotConnected = "蓝牙未连接";
 
 class BluePage extends StatefulWidget {
   BluePage({Key key}) : super(key: key);
@@ -19,10 +20,7 @@ class BluePage extends StatefulWidget {
 class _BluePageState extends State<BluePage> {
   String _connectState;
   _connectBlueTooth(String bleName, String pinCode) async {
-    String connectState = await connectBlueTooth(bleName, pinCode);
-    setState(() {
-      this._connectState = connectState;
-    });
+    await connectBlueTooth(bleName, pinCode);
   }
 
   _disConnectBlueTooth() async {
@@ -34,15 +32,18 @@ class _BluePageState extends State<BluePage> {
 
   _selectApp(String appSelectID) async {
     String s = await selectApp(appSelectID);
-    s = s == '1' ? '选择应用成功' : '选择应用失败';
+    s = s == '1' ? '选择应用成功' : blueNotConnected;
     this._showToast("$s");
   }
 
   _verifPIN(String pinCode) async {
     String s = '';
-    // pinCode = formatPinCode(pinCode);
     String res = await verifPIN(pinCode);
-    if (res != '1') s = '蓝牙未连接';
+    print('_verifPIN res: $res');
+    if (res == '0') {
+      this._showToast(blueNotConnected);
+      return;
+    }
     if (res == '9000') {
       s = '密码验证成功';
     } else if (res.substring(0, 3) == '63c') {
@@ -55,7 +56,39 @@ class _BluePageState extends State<BluePage> {
 
   _sign(String readySignStr) async {
     String s = await sign('000000', 'abc123');
+    print('_sign res: $s');
+    if (s == "0") {
+      this._showToast(blueNotConnected);
+      return;
+    }
     this._showToast("$s---${s.length}");
+  }
+
+  _getPubAddr() async {
+    String s = await getPubAddr();
+    if (s == "0") {
+      this._showToast(blueNotConnected);
+      return;
+    }
+    this._showToast("地址:$s");
+  }
+
+  _getPubKey() async {
+    String s = await getPubKey();
+    if (s == "0") {
+      this._showToast(blueNotConnected);
+      return;
+    }
+    this._showToast("pubkey:$s");
+  }
+
+  _getPubKeyHash() async {
+    String s = await getPubKeyHash();
+    if (s == "0") {
+      this._showToast(blueNotConnected);
+      return;
+    }
+    this._showToast("pubkeyhash:$s");
   }
 
   // Future<void> _verifySign(String signStr) async {
@@ -77,14 +110,21 @@ class _BluePageState extends State<BluePage> {
     bleNameController.text = "BLESIM111111";
     pinCodeController.text = "123456";
     pinCodeVerifyController.text = "000000";
-    this._connectState = '请连接蓝牙';
+    this._connectState = '蓝牙SIM卡';
     print('state:${this._connectState}');
     eventChannel.receiveBroadcastStream().listen(_onEvent, onError: _onError);
   }
 
   _onEvent(Object event) {
+    // print('event: $event');
+    Map dic=event;
+    print('event: $dic');
+    gPseudoWallet.pubAddr=dic["pubAddr"];
+    gPseudoWallet.pubKey=dic["pubKey"];
+    gPseudoWallet.pubHash=dic["pubHash"];
+    // print('event state: ${event['state']}');
     setState(() {
-      _connectState = event == '1' ? '蓝牙连接成功' : '蓝牙断开';
+      _connectState = dic["state"] == '1' ? '蓝牙连接成功' : '蓝牙未连接';
     });
   }
 
@@ -167,7 +207,25 @@ class _BluePageState extends State<BluePage> {
               onPressed: () {
                 this._sign("123");
               },
-            )
+            ),
+            MOutlineButton(
+              title: "pubaddr",
+              onPressed: () {
+                this._getPubAddr();
+              },
+            ),
+            MOutlineButton(
+              title: "pubkey",
+              onPressed: () {
+                this._getPubKey();
+              },
+            ),
+            MOutlineButton(
+              title: "pubkeyhash",
+              onPressed: () {
+                this._getPubKeyHash();
+              },
+            ),
           ],
         ),
       ),

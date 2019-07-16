@@ -138,11 +138,13 @@ class _TransferComponentState extends State<TransferComponent> {
 
     _transferAction() {
       transfer('', '').then((res) {
-        _stateModel.updateTxnHash(res.txnHash);
-        _stateModel.updateLastUock(res.lastUock);
-        _isDisableButton = false;
-        _isProgerssVisable = false;
-        loopQuery(res.txnHash);
+        if (res != null) {
+          _stateModel.updateTxnHash(res.txnHash);
+          _stateModel.updateLastUock(res.lastUock);
+          _isDisableButton = false;
+          _isProgerssVisable = false;
+          loopQuery(res.txnHash);
+        }
       });
     }
 
@@ -150,7 +152,9 @@ class _TransferComponentState extends State<TransferComponent> {
         margin: EdgeInsets.all(16),
         child: Column(
           children: <Widget>[
-            SizedBox(height: 10,),
+            SizedBox(
+              height: 10,
+            ),
             TextField(
               maxLength: 54,
               maxLines: 2,
@@ -174,7 +178,7 @@ class _TransferComponentState extends State<TransferComponent> {
                 labelText: '收款钱包地址',
               ),
               controller: addrController,
-              onChanged: (value){
+              onChanged: (value) {
                 _stateModel.updateAddr(value);
               },
             ),

@@ -154,12 +154,12 @@ Future<MakeSheetResult> transfer(pay_to, from_uocks) async {
       String _sign = await sign('000000', s);
       //验证签名
       // TeeVerifySign teeVerifySign = await verifySign(s, teeSign.msg);
-      TeeVerifySign teeVerifySign = await verifySign(s, _sign);
-      // TeeVerifySign teeVerifySign = null;
-      if (teeVerifySign == null) {
-        print('verify sign err,null');
-        return null;
-      }
+      // TeeVerifySign teeVerifySign = await verifySign(s, _sign);
+      // // TeeVerifySign teeVerifySign = null;
+      // if (teeVerifySign == null) {
+      //   print('verify sign err,null');
+      //   return null;
+      // }
 
       // List<int> sig = new List<int>.from(hexStrToBytes(teeSign.msg))
       //   ..addAll(CHR(hash_type));

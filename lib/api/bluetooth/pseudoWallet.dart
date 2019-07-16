@@ -1,3 +1,4 @@
+
 class PseudoWallet {
   String pubKey;
   String pubHash;
