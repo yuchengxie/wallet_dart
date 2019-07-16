@@ -40,7 +40,7 @@ class _BluePageState extends State<BluePage> {
 
   _verifPIN(String pinCode) async {
     String s = '';
-    pinCode = formatPinCode(pinCode);
+    // pinCode = formatPinCode(pinCode);
     String res = await verifPIN(pinCode);
     if (res != '1') s = '蓝牙未连接';
     if (res == '9000') {
@@ -53,12 +53,10 @@ class _BluePageState extends State<BluePage> {
     this._showToast("$s");
   }
 
-  _sign(String readySignStr) {}
-  // Future<void> _sign(String payload) async {
-  //   try {
-  //     String s = await methodChannel.invokeMethod('sign', [payload]);
-  //   } on PlatformException {}
-  // }
+  _sign(String readySignStr) async {
+    String s = await sign('000000', 'abc123');
+    this._showToast("$s---${s.length}");
+  }
 
   // Future<void> _verifySign(String signStr) async {
   //   try {
@@ -154,7 +152,7 @@ class _BluePageState extends State<BluePage> {
             TextField(
               controller: pinCodeVerifyController,
               decoration: InputDecoration(
-                prefixIcon: Icon(Icons.bluetooth),
+                prefixIcon: Icon(Icons.pin_drop),
                 hintText: '请输入要验证的PIN码',
               ),
             ),

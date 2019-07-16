@@ -1,18 +1,51 @@
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
+import 'package:nbc_wallet/api/bluetooth/formatcmd.dart';
+import 'package:nbc_wallet/api/bluetooth/pseudoWallet.dart';
 import 'dart:convert';
 import '../model/jsonEntity.dart';
 
 // const WEB_SERVER_BASE = 'http://127.0.0.1:3000';
-const WEB_SERVER_ADDR = 'http://user1-node.nb-chain.net';
-// const SUCCESS = 1;
-// const FAILED = 0;
-// const TEENOTREADY = -1;
+const WEB_SERVER_ADDR = 'http://raw0.nb-chain.net';
+const SUCCESS = 1;
+const FAILED = 0;
+const TEENOTREADY = -1;
+PseudoWallet gPseudoWallet = PseudoWallet();
 String appSelectID = "D196300077130010000000020101";
-// String pinCode = "0020000003000000";
 MethodChannel methodChannel = MethodChannel('hzf.bluetooth');
 EventChannel eventChannel = EventChannel('hzf.bluetoothState');
+
+Future<String> selectApp(String appSelectID) async {
+  try {
+    String res = await methodChannel.invokeMethod('selectApp', [appSelectID]);
+    return res;
+  } on PlatformException {
+    return 'error';
+  }
+}
+
+Future<String> verifPIN(String pinCode) async {
+  String cmdPinCode = formatPinCode(pinCode);
+  return await transmit(cmdPinCode);
+}
+
+Future<String> sign(String pinCode, String payload) async {
+  String cmdSign = formatPayloadToSign(pinCode, payload);
+  return await transmit(cmdSign);
+}
+
+Future<String> getPubAddr() {
+  return null;
+}
+
+Future<String> getPubKey() {
+  return null;
+}
+
+Future<String> getPubKeyHash() {
+  return null;
+}
 
 Future<String> connectBlueTooth(String bleName, String pinCode) async {
   try {
@@ -32,34 +65,13 @@ Future<void> disConnectBlueTooth() async {
   }
 }
 
-Future<String> selectApp(String appSelectID) async {
+Future<String> transmit(String sendStr) async {
   try {
-    String res = await methodChannel.invokeMethod('selectApp', [appSelectID]);
+    String res = await methodChannel.invokeMethod('transmit', [sendStr]);
     return res;
   } on PlatformException {
     return 'error';
   }
-}
-
-Future<String> verifPIN(String pincode) async {
-  try {
-    String res = await methodChannel.invokeMethod('verifPIN', [pincode]);
-    return res;
-  } on PlatformException {
-    return 'error';
-  }
-}
-
-Future<List<int>> transfer() async {
-  return null;
-}
-
-Future<List<int>> transmit(String cmd) async {
-  return null;
-}
-
-Future<TeeSign> sign(String payload) async {
-  return null;
 }
 
 // Future<TeeWallet> getWallet() async {
@@ -93,24 +105,24 @@ Future<TeeSign> sign(String payload) async {
 //   return teeSign;
 // }
 
-// Future<TeeVerifySign> verifySign(String payload, String sig) async {
-//   //tee签名
-//   final url = 'http://127.0.0.1:3000/verify_sign';
-//   final params = {'data': payload, 'sig': sig};
-//   final res = await http.post(url, body: params);
-//   TeeVerifySign teeVerifySign;
-//   if (res.statusCode == 200) {
-//     final _json = json.decode(res.body);
-//     if (_json['status'] == SUCCESS) {
-//       teeVerifySign = TeeVerifySign.fromJson(_json);
-//       print('>>> tee_sign:${teeVerifySign.msg}');
-//       return teeVerifySign;
-//     } else {
-//       print('>>> sign err');
-//     }
-//   }
-//   return teeVerifySign;
-// }
+Future<TeeVerifySign> verifySign(String payload, String sig) async {
+  //tee签名
+  final url = 'http://127.0.0.1:3000/verify_sign';
+  final params = {'data': payload, 'sig': sig};
+  final res = await http.post(url, body: params);
+  TeeVerifySign teeVerifySign;
+  if (res.statusCode == 200) {
+    final _json = json.decode(res.body);
+    if (_json['status'] == SUCCESS) {
+      teeVerifySign = TeeVerifySign.fromJson(_json);
+      print('>>> tee_sign:${teeVerifySign.msg}');
+      return teeVerifySign;
+    } else {
+      print('>>> sign err');
+    }
+  }
+  return teeVerifySign;
+}
 
 // void get_block() async {
 //   final url = WEB_SERVER_BASE + '/get_block';
