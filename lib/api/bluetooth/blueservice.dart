@@ -30,10 +30,6 @@ Future<String> sign(String pinCode, String payload) async {
   return res;
 }
 
-// Future<void> getWallet() async{
-
-// }
-
 Future<String> getPubAddr() async {
   return await transmit(CMD_PUB_ADDR);
 }
@@ -48,16 +44,7 @@ Future<String> getPubKeyHash() async {
 
 Future<void> connectBlueTooth(String bleName, String pinCode) async {
   try {
-    // String res = await methodChannel
-    //     .invokeMethod('connectBlueTooth', [bleName, pinCode]);
     await methodChannel.invokeMethod('connectBlueTooth', [bleName, pinCode]);
-    // if(res=="1"){
-    // if()
-    // gPseudoWallet.pubAddr = await getPubAddr();
-    // gPseudoWallet.pubKey = await getPubKey();
-    // gPseudoWallet.pubHash = await getPubKeyHash();
-    // }
-    // return res;
   } on PlatformException {}
 }
 
@@ -163,46 +150,11 @@ int bytesToNum(List<int> bytes) {
   num total = 0;
   for (int i = bytes.length - 1; i >= 0; i--) {
     var t = bytes[i];
-    // print('index:$');
     var a = t << (bytes.length - i - 1) * 8;
-    print('index:$i,a:$a');
     total += a;
   }
-  print('total:$total');
   return total;
 }
-// String compress_public_key(String pubkey){
-//   List<int> p= hexStrToBytes(pubkey);
-//   if(p[0]!=4 || pubkey.length!=65){
-//     print('invalid uncompressed public key');
-//     return '';
-//   }
-//   int y_parity = string_to_number(p.sublist(33,65));
-// }
-
-// int string_to_number(string){
-//     return int(binascii.hexlify(string), 16)
-// }
-
-// int _hexToInt(String hex) {
-//   int val = 0;
-//   int len = hex.length;
-//   for (int i = 0; i < len; i++) {
-//     int hexDigit = hex.codeUnitAt(i);
-//     if (hexDigit >= 48 && hexDigit <= 57) {
-//       val += (hexDigit - 48) * (1 << (4 * (len - 1 - i)));
-//     } else if (hexDigit >= 65 && hexDigit <= 70) {
-//       // A..F
-//       val += (hexDigit - 55) * (1 << (4 * (len - 1 - i)));
-//     } else if (hexDigit >= 97 && hexDigit <= 102) {
-//       // a..f
-//       val += (hexDigit - 87) * (1 << (4 * (len - 1 - i)));
-//     } else {
-//       throw new FormatException("Invalid hexadecimal value");
-//     }
-//   }
-//   return val;
-// }
 
 // void get_block() async {
 //   final url = WEB_SERVER_BASE + '/get_block';
