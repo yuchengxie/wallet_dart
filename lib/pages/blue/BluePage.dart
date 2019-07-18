@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:nbc_wallet/api/provider/stateModel.dart';
+import 'package:nbc_wallet/api/utils/utils.dart';
 import 'package:provider/provider.dart';
 import 'package:toast/toast.dart';
 import '../../api/bluetooth/blueservice.dart';
@@ -117,12 +120,33 @@ class _BluePageState extends State<BluePage> {
 
   _onEvent(Object event) {
     // print('event: $event');
-    Map dic=event;
-    print('event: $dic');
-    gPseudoWallet.pubAddr=dic["pubAddr"];
-    gPseudoWallet.pubKey=dic["pubKey"];
-    gPseudoWallet.pubHash=dic["pubHash"];
-    // print('event state: ${event['state']}');
+    Map dic = event;
+    // print('event: $dic');
+    String state = dic["state"];
+    if (state == "1") {
+      String s1 = dic["pubAddr"];
+      List<int> b1 = hexStrToBytes(s1);
+      String pubAddr = Latin1Decoder().convert(b1);
+      gPseudoWallet.pubAddr = pubAddr;
+      String s2 = dic["pubKey"];
+      String compubkey= compressPublicKey(s2);
+      gPseudoWallet.pubKey = compubkey;
+      // gPseudoWallet.pubKey = dic["pubKey"];
+      // String s3 = dic["pubHash"];
+      // String pubHash = s3.substring(0, s3.length - 4);
+      gPseudoWallet.pubHash = dic["pubHash"];
+    }
+    print('>>> onEvent:pubAddr:${gPseudoWallet.pubAddr}---pubKey:${gPseudoWallet.pubKey}---pubHash:${gPseudoWallet.pubHash}');
+    // print('>>> onEvent:pubKey:${gPseudoWallet.pubKey}');
+    // print('>>> onEvent:pubHash:${gPseudoWallet.pubHash}');
+    // gPseudoWallet.pubAddr = dic[
+    //     "pubAddr"]; //313368335434764732364431365746586753665158444c6b67574e676f6b7442784c327163597a316242434138354e7541654b574a4e689000
+    // gPseudoWallet.pubKey = dic["pubKey"];
+    // //040959255842298e94133acf1707674ae55cc4e59b4387d2ee4bcd1759b0e124830e3ee454e8e8324b4a503ca067ef986e6bc97acad42806b938f077e13bd72eba9000
+    // gPseudoWallet.pubHash = dic["pubHash"];
+    // //5b42c23b43e2a274b40bf3a78eb6dc313ea736346f9a8c4397d904548763fdee9000
+    // //对数据进行转换
+
     setState(() {
       _connectState = dic["state"] == '1' ? '蓝牙连接成功' : '蓝牙未连接';
     });

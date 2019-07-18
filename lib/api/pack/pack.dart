@@ -10,7 +10,7 @@ final _magic = [0xf9, 0x6e, 0x62, 0x74];
 /*
  * 创建交易表单二进制组包
  */
-List<int> txnPayload(Transaction txn) {
+List<int> getTxnPayload(Transaction txn) {
   _write = ByteDataWriter();
   _write.writeUint32(txn.version);
   _writeTxIns(txn.tx_in);

@@ -11,8 +11,8 @@ import './scripts/opscript.dart';
 import './utils/utils.dart';
 import 'bluetooth/blueservice.dart';
 
-const WEB_SERVER_ADDR = 'http://raw0.nb-chain.net';
-// const WEB_SERVER_ADDR = 'http://user1-node.nb-chain.net';
+// const WEB_SERVER_ADDR = 'http://raw0.nb-chain.net';
+const WEB_SERVER_ADDR = 'http://user1-node.nb-chain.net';
 const TXN_PENDING = 0;
 const TXN_SUCCESS = 1;
 const TXN_ERROR = -1;
@@ -29,7 +29,7 @@ var sequence = 0,
 List _wait_submit = [];
 int seq = 0;
 List state_info;
-TeeWallet _wallet;
+// TeeWallet _wallet;
 final magic = [0xf9, 0x6e, 0x62, 0x74];
 MakeSheet makesheet;
 OrgSheet orgSheet;
@@ -76,183 +76,150 @@ Future<MakeSheetResult> transfer(pay_to, from_uocks) async {
     return null;
   }
   //获取钱包
-  print("wallet: ${gPseudoWallet.pubAddr}");
-//   //网络获取钱包
-//   // _wallet = await getWallet();
-//   _wallet = await null;
-//   if (_wallet == null) {
-//     print('_wallet null');
-//     return null;
-//   }
-//   List<int> coin_hash = hexStrToBytes(_wallet.pub_hash + '00');
-//   print(coin_hash);
+  print("wallet pubAddr: ${gPseudoWallet.pubAddr}");
+  print("wallet pubkey: ${gPseudoWallet.pubKey}");
 
-//   var d = {};
-//   var _pay_to = makesheet.pay_to;
-//   for (var i = 0; i < _pay_to.length; i++) {
-//     var p = _pay_to[i];
-//     List<int> _add = strToBytes(p.address);
-//     if (p.value != 0 || _add.sublist(0, 1) != 0x6a) {
-//       Uint8List ret = decode_check(p.address).sublist(1);
-//       if (ret == null) {
-//         continue;
-//       }
-//       String ret_str = bytesToHexStr(ret);
-//       d[ret_str] = p.value;
-//     }
-//   }
+  List<int> coinHash = hexStrToBytes(gPseudoWallet.pubHash + '00');
+  print(coinHash);
 
-//   for (int idx = 0; idx < orgSheet.tx_out.length; idx++) {
-//     var item = orgSheet.tx_out[idx];
-//     if (item.value == 0 && item.pk_script.substring(0, 1) == '') {
-//       continue;
-//     }
-// //脚本操作
-//     String addr = process(item.pk_script).split(' ')[2];
-//     if (addr == null) {
-//       print('Error: invalid output address (idx=${idx})');
-//     } else {
-//       var value_ = d[addr];
-//       if (value_ != null) {
-//         d.remove(d[addr]);
-//       } else {
-//         continue;
-//       }
-//       if (item.value != value_) {
-//         if (value_ == null && addr.substring(4) == bytesToHexStr(coin_hash)) {
-//         } else {
-//           print('Error: invalid output value (idx=${idx})');
-//         }
-//       }
-//     }
-//   }
+  var d = {};
+  var _pay_to = makesheet.pay_to;
+  for (var i = 0; i < _pay_to.length; i++) {
+    var p = _pay_to[i];
+    List<int> _add = strToBytes(p.address);
+    if (p.value != 0 || _add.sublist(0, 1) != 0x6a) {
+      Uint8List ret = decode_check(p.address).sublist(1);
+      if (ret == null) {
+        continue;
+      }
+      String retStr = bytesToHexStr(ret);
+      d[retStr] = p.value;
+    }
+  }
 
-//   for (var k in d.keys) {
-//     print('${k}--${d[k]}');
-//   }
+  for (int idx = 0; idx < orgSheet.tx_out.length; idx++) {
+    var item = orgSheet.tx_out[idx];
+    if (item.value == 0 && item.pk_script.substring(0, 1) == '') {
+      continue;
+    }
+//脚本操作
+    String addr = process(item.pk_script).split(' ')[2];
+    if (addr == null) {
+      print('Error: invalid output address (idx=${idx})');
+    } else {
+      var value_ = d[addr];
+      if (value_ != null) {
+        d.remove(d[addr]);
+      } else {
+        continue;
+      }
+      if (item.value != value_) {
+        if (value_ == null && addr.substring(4) == bytesToHexStr(coinHash)) {
+        } else {
+          print('Error: invalid output value (idx=${idx})');
+        }
+      }
+    }
+  }
 
-//   var pks_out0 = orgSheet.pks_out[0].items;
-//   var pks_num = pks_out0.length;
-//   List<TxIn> tx_ins2 = List<TxIn>();
-//   for (int idx = 0; idx < orgSheet.tx_in.length; idx++) {
-//     if (idx < pks_num) {
-//       TxIn tx = orgSheet.tx_in[idx];
-//       int hash_type = 1;
-//       Uint8List sign_payload = script_payload(pks_out0[idx], orgSheet.version,
-//           orgSheet.tx_in, orgSheet.tx_out, 0, idx, hash_type);
-//       String s = bytesToHexStr(sign_payload);
-//       print('>>> ready sign payload:${s}---${s.length}');
+  for (var k in d.keys) {
+    print('$k--${d[k]}');
+  }
 
-//       //tee签名
-//       // TeeSign teeSign = await getSign(s);
-//       // if (teeSign == null) {
-//       //   print('teeSign null');
-//       //   return null;
-//       // }
-//       // TeeSign teeSign = null;
-//       String _sign = await sign('000000', s);
-//       //验证签名
-//       // TeeVerifySign teeVerifySign = await verifySign(s, teeSign.msg);
-//       TeeVerifySign teeVerifySign = await verifySign(s, _sign);
-//       // TeeVerifySign teeVerifySign = null;
-//       if (teeVerifySign == null) {
-//         print('verify sign err,null');
-//         return null;
-//       }
+  var pksOut0 = orgSheet.pks_out[0].items;
+  var pksNum = pksOut0.length;
+  List<TxIn> txIns2 = List<TxIn>();
+  for (int idx = 0; idx < orgSheet.tx_in.length; idx++) {
+    if (idx < pksNum) {
+      TxIn tx = orgSheet.tx_in[idx];
+      int hashType = 1;
+      Uint8List signPayload = script_payload(pksOut0[idx], orgSheet.version,
+          orgSheet.tx_in, orgSheet.tx_out, 0, idx, hashType);
+      String s = bytesToHexStr(signPayload);
+      print('>>> ready sign payload:$s---${s.length}');
+      //hash一次
+      String t = sha256.convert(signPayload).toString();
+      print('ready sign payload hash256:$t');
 
-//       // List<int> sig = new List<int>.from(hexStrToBytes(teeSign.msg))
-//       //   ..addAll(CHR(hash_type));
-//       // print('>>> sig:${bytesToHexStr(sig)}');
+      String _sign = await sign('000000', t);
+      print('>>> _sign: $_sign-${_sign.length}');
 
-//       // List<int> sig_script = List.from(CHR(sig.length))
-//       //   ..addAll(sig)
-//       //   ..addAll(CHR(hexStrToBytes(_wallet.pub_key).length))
-//       //   ..addAll(hexStrToBytes(_wallet.pub_key));
-//       // print(
-//       //     '>>> sig_script:${bytesToHexStr(sig_script)}---${bytesToHexStr(sig_script).length}');
-//       // tx_ins2.add(TxIn(
-//       //     prev_output: tx.prev_output,
-//       //     sig_script: bytesToHexStr(sig_script),
-//       //     sequence: tx.sequence));
-  // }
-  // }
+      //验证签名
+      // TeeVerifySign teeVerifySign =
+      //     await verifySign(s, _sign, gPseudoWallet.pubKey);
+      // if (teeVerifySign == null) {
+      //   print('未验证成功，返回');
+      //   return null;
+      // }
+      
+      List<int> sig = new List<int>.from(hexStrToBytes(_sign))
+        ..addAll(CHR(hashType));
+      print('>>> sig:${bytesToHexStr(sig)}');
 
-  // Transaction txn = Transaction(
-  //     version: orgSheet.version,
-  //     tx_in: tx_ins2,
-  //     tx_out: orgSheet.tx_out,
-  //     lock_time: orgSheet.lock_time,
-  //     sig_raw: '');
-  // List<int> txn_payload = txnPayload(txn);
-  // txn_payload = wholePayload(txn_payload, txn.command);
-  // var t = bytesToHexStr(txn_payload);
-  // print('txn_payload:${t} --- ${t.length}');
-  // hash_ = sha256
-  //     .convert(
-  //         sha256.convert(txn_payload.sublist(24, txn_payload.length - 1)).bytes)
-  //     .bytes;
-  // print('>>> hash_:${bytesToHexStr(hash_)}');
-  // state_info = [
-  //   orgSheet.sequence,
-  //   txn,
-  //   'requested',
-  //   hash_,
-  //   orgSheet.last_uocks
-  // ];
-  // _wait_submit.add(state_info);
-  // while (_wait_submit.length > SHEET_CACHE_SIZE) {
-  //   _wait_submit.remove(_wait_submit[0]);
-  // }
+      List<int> sigScript = List.from(CHR(sig.length))
+        ..addAll(sig)
+        ..addAll(CHR(hexStrToBytes(gPseudoWallet.pubKey).length))
+        ..addAll(hexStrToBytes(gPseudoWallet.pubKey));
+      print(
+          '>>> sig_script:${bytesToHexStr(sigScript)}---${bytesToHexStr(sigScript).length}');
+      txIns2.add(TxIn(
+          prev_output: tx.prev_output,
+          sig_script: bytesToHexStr(sigScript),
+          sequence: tx.sequence));
+    }
+  }
 
-  // if (submit) {
-  //   int unsign_num = orgSheet.tx_in.length - pks_num;
-  //   if (unsign_num != 0) {
-  //     print('Warning: some input not signed: ${unsign_num}');
-  //     return null;
-  //   } else {
-  //     String url_txn = WEB_SERVER_ADDR + '/txn/sheets/txn';
-  //     var responseTxn = await http.post(url_txn, body: txn_payload);
-  //     if (responseTxn.statusCode != 200) {
-  //       print('error /txn/sheets/txn');
-  //       return null;
-  //     }
-  //     List<int> responseTxnBytes = responseTxn.bodyBytes;
-  //     String sTxn = bytesToHexStr(responseTxnBytes);
-  //     print('发送txn_payload接收到数据${sTxn}---${sTxn.length}');
-  //     MakeSheetResult makeSheetReusult = getTxnHash(responseTxnBytes);
-  //     return makeSheetReusult;
+  Transaction txn = Transaction(
+      version: orgSheet.version,
+      tx_in: txIns2,
+      tx_out: orgSheet.tx_out,
+      lock_time: orgSheet.lock_time,
+      sig_raw: '');
+  List<int> txnPayload = getTxnPayload(txn); 
+  txnPayload = wholePayload(txnPayload, txn.command);
+  String t = bytesToHexStr(txnPayload);
+  print('txn_payload:$t --- ${t.length}');
+  hash_ = sha256
+      .convert(
+          sha256.convert(txnPayload.sublist(24, txnPayload.length - 1)).bytes)
+      .bytes;
+  print('>>> hash_:${bytesToHexStr(hash_)}');
+  state_info = [
+    orgSheet.sequence,
+    txn,
+    'requested',
+    hash_,
+    orgSheet.last_uocks
+  ];
+  _wait_submit.add(state_info);
+  while (_wait_submit.length > SHEET_CACHE_SIZE) {
+    _wait_submit.remove(_wait_submit[0]);
+  }
 
-  //     //根据生成的交易哈希可以作查询
-  //     // bool isQuery = true;
-  //     // if (txnHash != '') {
-  //     //   while (isQuery) {
-  //     //     sleep(Duration(seconds: 10));
-  //     //     String url_txnhash =
-  //     //         WEB_SERVER_ADDR + '/txn/sheets/state?hash=' + txnHash;
-  //     //     var response_txnhash = await http.get(url_txnhash);
-  //     //     if (response_txnhash.statusCode == 200) {
-  //     //       QueryTxnHashResult queryTxnHashResult = queryTran(response_txnhash);
-  //     //       if (queryTxnHashResult.status == 1) {
-  //     //         //交易成功
-  //     //         var msg = queryTxnHashResult.successInfo;
-  //     //         if (msg.confirm >= 1) {
-  //     //           print('[${DateTime.now()}] 交易成功');
-  //     //           isQuery = false;
-  //     //           // return msg;
-  //     //         }
-  //     //       }
-  //     //     } else {
-  //     //       print('Error: request failed, code=${response_txnhash.statusCode}');
-  //     //     }
-  //     //   }
-  //     // }
-  //   }
-  // }
+  if (submit) {
+    int unsignNum = orgSheet.tx_in.length - pksNum;
+    if (unsignNum != 0) {
+      print('Warning: some input not signed: $unsignNum');
+      return null;
+    } else {
+      String urlTxn = WEB_SERVER_ADDR + '/txn/sheets/txn';
+      var responseTxn = await http.post(urlTxn, body: txnPayload);
+      if (responseTxn.statusCode != 200) {
+        print('error /txn/sheets/txn');
+        return null;
+      }
+      List<int> responseTxnBytes = responseTxn.bodyBytes;
+      String sTxn = bytesToHexStr(responseTxnBytes);
+      print('发送txn_payload接收到数据${sTxn}---${sTxn.length}');
+      MakeSheetResult makeSheetReusult = getTxnHash(responseTxnBytes);
+      return makeSheetReusult;
+    }
+  }
 }
 
 Future<QueryTxnHashResult> getQueryTxnHashResult(String txnHash) async {
-  String utl = WEB_SERVER_ADDR + '/txn/sheets/state?hash=' + txnHash;
-  var res = await http.get(utl);
+  String url = WEB_SERVER_ADDR + '/txn/sheets/state?hash=' + txnHash;
+  var res = await http.get(url);
 
   String command = getCommandStrFromBytes(res.bodyBytes);
   QueryTxnHashResult queryTxnHashResult;
@@ -269,6 +236,7 @@ Future<QueryTxnHashResult> getQueryTxnHashResult(String txnHash) async {
       print('Error:$sErr');
       queryTxnHashResult = QueryTxnHashResult(
           stateInfo: '$sErr', successInfo: null, status: TXN_ERROR);
+      return queryTxnHashResult;
     }
   } else if (command == UdpConfirm.command) {
     UdpConfirm confirm = parseUdpConfirm(res.bodyBytes);
@@ -310,8 +278,6 @@ MakeSheetResult getTxnHash(responseTxnBytes) {
           print(sDesc);
           print('[${DateTime.now()}] Transaction hash:${txnHash}');
         }
-        // }
-        // return txn_hash;
         return MakeSheetResult(txnHash: txnHash, lastUock: lastUocks);
       }
     }
@@ -334,7 +300,9 @@ MakeSheet prepare_txn1_(pay_to, ext_in, submit, scan_count, min_utxo, max_utxo,
   List<PayFrom> pay_from = List<PayFrom>();
   PayFrom pay_from1 = PayFrom(
     value: 0,
-    address: '13TtvKn5cwNhdxfXSbz1MewRnTEPB534rudq41LnRP1T9A4TJmjAKhJ',
+    address: gPseudoWallet.pubAddr,
+    // address: '13h3T4vG26D16WFXgSfQXDLkgWNgoktBxL2qcYz1bBCA85NuAeKWJNh',
+    // address: '13TtvKn5cwNhdxfXSbz1MewRnTEPB534rudq41LnRP1T9A4TJmjAKhJ',
   );
   pay_from.add(pay_from1);
 

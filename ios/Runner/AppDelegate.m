@@ -4,12 +4,6 @@
 #import "NZIKey.h"
 #import "NZSIMSDK.h"
 
-//@interface PseudoWallet:NSObject
-//@property (nonatomic, copy) NSString* pubAddr;
-//@property (nonatomic, copy) NSString* pubKey;
-//@property (nonatomic, copy) NSString* pubHash;
-//@end
-
 @interface AppDelegate()<NZSIMSDKDelegate>{
     NZSIMSDK *shareSdk;
     NZIKey *ikey;
@@ -88,14 +82,12 @@ didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
 
 - (void)sendBlueToothConnectStateEvent {
     if (!_eventSink) return;
-//    NSString * strState=_blueToothState == BLUE_CONNCTED? BLUECONNECTEDSUCCESS:BLUEDISCONNECTED;
     NSDictionary *dic = [NSDictionary dictionaryWithObjectsAndKeys:
                          blueState,@"state",
                          pubAddr, @"pubAddr",
                          pubKey, @"pubKey",
                          pubHash,@"pubHash", nil ];
     _eventSink(dic);
-//    _eventSink([strState]);
 }
 
 - (FlutterError*)onCancelWithArguments:(id)arguments {
@@ -105,22 +97,6 @@ didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
 }
 
 #pragma mark -bluetooth
-//- (NSString*)connectBlueTooth: (NSString*)bleName :(NSString*) pinCode {
-//    dispatch_semaphore_t sema =dispatch_semaphore_create(0);
-//    __block NSString* res;
-//    dispatch_async(dispatch_get_global_queue(0, 0), ^{
-//        int code=[shareSdk ConnectWithBleName:bleName andBleAuthCode:pinCode];
-//        res = code == 0? @"success": @"failed";
-//        dispatch_semaphore_signal(sema);
-//    });
-//    dispatch_semaphore_wait(sema,DISPATCH_TIME_FOREVER);
-//    return res;
-//}
-
-//-(void)connectBlueTooth: (NSString*)bleName :(NSString*) pinCode{
-//    [shareSdk ConnectWithBleName:bleName andBleAuthCode:pinCode];
-//}
-
 -(void)disConnectBlueTooth{
     dispatch_semaphore_t sema =dispatch_semaphore_create(0);
     dispatch_async(dispatch_get_global_queue(0, 0), ^{
@@ -159,6 +135,9 @@ didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
     dispatch_async(dispatch_get_global_queue(0, 0), ^{
         NSData *r=[shareSdk SendSynchronized:d];
         res=[self convertDataToHexStr:r];
+        if(res.length>4 && [[res substringFromIndex:res.length-4] isEqualToString:@"9000"]){
+            res=[res substringToIndex:res.length-4];
+        }
         NSLog(@"接收消息: %@",res);
         dispatch_semaphore_signal(sema);
     });

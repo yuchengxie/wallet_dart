@@ -1,19 +1,19 @@
+import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
-import 'package:bitcoin_flutter/bitcoin_flutter.dart';
 import 'package:crypto/src/sha256.dart';
 import 'package:bs58check/bs58check.dart' as bs58check;
 import 'package:buffer/buffer.dart';
 import 'package:http/http.dart' as http;
+import 'package:nbc_wallet/api/server/net.dart';
 import './pack/pack.dart';
 import './pack/unpack.dart';
 import './model/jsonEntity.dart';
 import './model/message.dart';
 import './scripts/opscript.dart';
 import './utils/utils.dart';
-import 'bluetooth/blueservice.dart';
 
-const WEB_SERVER_ADDR = 'http://raw0.nb-chain.net';
-// const WEB_SERVER_ADDR = 'http://user1-node.nb-chain.net';
+const WEB_SERVER_ADDR = 'http://user1-node.nb-chain.net';
 const TXN_PENDING = 0;
 const TXN_SUCCESS = 1;
 const TXN_ERROR = -1;
@@ -39,7 +39,6 @@ bool isQuery = true;
 
 void main() {
   // query_sheet('', '');
-  transfer('', '');
 }
 
 Future<MakeSheetResult> transfer(pay_to, from_uocks) async {
@@ -52,7 +51,6 @@ Future<MakeSheetResult> transfer(pay_to, from_uocks) async {
   int from_uocks = 0;
   makesheet = prepare_txn1_(pay_to, ext_in, submit, scan_count, min_utxo,
       max_utxo, sort_flag, from_uocks);
-  print('makesheet: $makesheet');
   if (makesheet == null) {
     return null;
   }
@@ -80,8 +78,7 @@ Future<MakeSheetResult> transfer(pay_to, from_uocks) async {
   }
 
   //网络获取钱包
-  // _wallet = await getWallet();
-  _wallet = await null;
+  _wallet = await getWallet();
   if (_wallet == null) {
     print('_wallet null');
     return null;
@@ -146,113 +143,107 @@ Future<MakeSheetResult> transfer(pay_to, from_uocks) async {
       print('>>> ready sign payload:${s}---${s.length}');
 
       //tee签名
-      // TeeSign teeSign = await getSign(s);
-      // if (teeSign == null) {
-      //   print('teeSign null');
-      //   return null;
-      // }
-      // TeeSign teeSign = null;
-      //蓝牙签名
-      String _sign = await sign('000000', s);
-      
-      // ECPair.fromPublicKey(publicKey);
+      TeeSign teeSign = await getSign(s);
+      if (teeSign == null) {
+        print('teeSign null');
+        return null;
+      }
       //验证签名
-      // TeeVerifySign teeVerifySign = await verifySign(s, teeSign.msg);
-      // TeeVerifySign teeVerifySign = await verifySign(s, _sign);
-      // // TeeVerifySign teeVerifySign = null;
-      // if (teeVerifySign == null) {
-      //   print('verify sign err,null');
-      //   return null;
-      // }
+      TeeVerifySign teeVerifySign = await verifySign(s, teeSign.msg);
+      if (teeVerifySign == null) {
+        print('verify sign err,null');
+        return null;
+      }
 
-      // List<int> sig = new List<int>.from(hexStrToBytes(teeSign.msg))
-      //   ..addAll(CHR(hash_type));
-      // print('>>> sig:${bytesToHexStr(sig)}');
+      List<int> sig = new List<int>.from(hexStrToBytes(teeSign.msg))
+        ..addAll(CHR(hash_type));
+      print('>>> sig:${bytesToHexStr(sig)}');
 
-      // List<int> sig_script = List.from(CHR(sig.length))
-      //   ..addAll(sig)
-      //   ..addAll(CHR(hexStrToBytes(_wallet.pub_key).length))
-      //   ..addAll(hexStrToBytes(_wallet.pub_key));
-      // print(
-      //     '>>> sig_script:${bytesToHexStr(sig_script)}---${bytesToHexStr(sig_script).length}');
-      // tx_ins2.add(TxIn(
-      //     prev_output: tx.prev_output,
-      //     sig_script: bytesToHexStr(sig_script),
-      //     sequence: tx.sequence));
+      List<int> sig_script = List.from(CHR(sig.length))
+        ..addAll(sig)
+        ..addAll(CHR(hexStrToBytes(_wallet.pub_key).length))
+        ..addAll(hexStrToBytes(_wallet.pub_key));
+      print(
+          '>>> sig_script:${bytesToHexStr(sig_script)}---${bytesToHexStr(sig_script).length}');
+      tx_ins2.add(TxIn(
+          prev_output: tx.prev_output,
+          sig_script: bytesToHexStr(sig_script),
+          sequence: tx.sequence));
     }
   }
 
-  // Transaction txn = Transaction(
-  //     version: orgSheet.version,
-  //     tx_in: tx_ins2,
-  //     tx_out: orgSheet.tx_out,
-  //     lock_time: orgSheet.lock_time,
-  //     sig_raw: '');
+  Transaction txn = Transaction(
+      version: orgSheet.version,
+      tx_in: tx_ins2,
+      tx_out: orgSheet.tx_out,
+      lock_time: orgSheet.lock_time,
+      sig_raw: '');
   // List<int> txn_payload = txnPayload(txn);
-  // txn_payload = wholePayload(txn_payload, txn.command);
-  // var t = bytesToHexStr(txn_payload);
-  // print('txn_payload:${t} --- ${t.length}');
-  // hash_ = sha256
-  //     .convert(
-  //         sha256.convert(txn_payload.sublist(24, txn_payload.length - 1)).bytes)
-  //     .bytes;
-  // print('>>> hash_:${bytesToHexStr(hash_)}');
-  // state_info = [
-  //   orgSheet.sequence,
-  //   txn,
-  //   'requested',
-  //   hash_,
-  //   orgSheet.last_uocks
-  // ];
-  // _wait_submit.add(state_info);
-  // while (_wait_submit.length > SHEET_CACHE_SIZE) {
-  //   _wait_submit.remove(_wait_submit[0]);
-  // }
+  List<int> txn_payload = getTxnPayload(txn);
+  txn_payload = wholePayload(txn_payload, txn.command);
+  var t = bytesToHexStr(txn_payload);
+  print('txn_payload:${t} --- ${t.length}');
+  hash_ = sha256
+      .convert(
+          sha256.convert(txn_payload.sublist(24, txn_payload.length - 1)).bytes)
+      .bytes;
+  print('>>> hash_:${bytesToHexStr(hash_)}');
+  state_info = [
+    orgSheet.sequence,
+    txn,
+    'requested',
+    hash_,
+    orgSheet.last_uocks
+  ];
+  _wait_submit.add(state_info);
+  while (_wait_submit.length > SHEET_CACHE_SIZE) {
+    _wait_submit.remove(_wait_submit[0]);
+  }
 
-  // if (submit) {
-  //   int unsign_num = orgSheet.tx_in.length - pks_num;
-  //   if (unsign_num != 0) {
-  //     print('Warning: some input not signed: ${unsign_num}');
-  //     return null;
-  //   } else {
-  //     String url_txn = WEB_SERVER_ADDR + '/txn/sheets/txn';
-  //     var responseTxn = await http.post(url_txn, body: txn_payload);
-  //     if (responseTxn.statusCode != 200) {
-  //       print('error /txn/sheets/txn');
-  //       return null;
-  //     }
-  //     List<int> responseTxnBytes = responseTxn.bodyBytes;
-  //     String sTxn = bytesToHexStr(responseTxnBytes);
-  //     print('发送txn_payload接收到数据${sTxn}---${sTxn.length}');
-  //     MakeSheetResult makeSheetReusult = getTxnHash(responseTxnBytes);
-  //     return makeSheetReusult;
+  if (submit) {
+    int unsign_num = orgSheet.tx_in.length - pks_num;
+    if (unsign_num != 0) {
+      print('Warning: some input not signed: ${unsign_num}');
+      return null;
+    } else {
+      String url_txn = WEB_SERVER_ADDR + '/txn/sheets/txn';
+      var responseTxn = await http.post(url_txn, body: txn_payload);
+      if (responseTxn.statusCode != 200) {
+        print('error /txn/sheets/txn');
+        return null;
+      }
+      List<int> responseTxnBytes = responseTxn.bodyBytes;
+      String sTxn = bytesToHexStr(responseTxnBytes);
+      print('发送txn_payload接收到数据${sTxn}---${sTxn.length}');
+      MakeSheetResult makeSheetReusult = getTxnHash(responseTxnBytes);
+      return makeSheetReusult;
 
-  //     //根据生成的交易哈希可以作查询
-  //     // bool isQuery = true;
-  //     // if (txnHash != '') {
-  //     //   while (isQuery) {
-  //     //     sleep(Duration(seconds: 10));
-  //     //     String url_txnhash =
-  //     //         WEB_SERVER_ADDR + '/txn/sheets/state?hash=' + txnHash;
-  //     //     var response_txnhash = await http.get(url_txnhash);
-  //     //     if (response_txnhash.statusCode == 200) {
-  //     //       QueryTxnHashResult queryTxnHashResult = queryTran(response_txnhash);
-  //     //       if (queryTxnHashResult.status == 1) {
-  //     //         //交易成功
-  //     //         var msg = queryTxnHashResult.successInfo;
-  //     //         if (msg.confirm >= 1) {
-  //     //           print('[${DateTime.now()}] 交易成功');
-  //     //           isQuery = false;
-  //     //           // return msg;
-  //     //         }
-  //     //       }
-  //     //     } else {
-  //     //       print('Error: request failed, code=${response_txnhash.statusCode}');
-  //     //     }
-  //     //   }
-  //     // }
-  //   }
-  // }
+      //根据生成的交易哈希可以作查询
+      // bool isQuery = true;
+      // if (txnHash != '') {
+      //   while (isQuery) {
+      //     sleep(Duration(seconds: 10));
+      //     String url_txnhash =
+      //         WEB_SERVER_ADDR + '/txn/sheets/state?hash=' + txnHash;
+      //     var response_txnhash = await http.get(url_txnhash);
+      //     if (response_txnhash.statusCode == 200) {
+      //       QueryTxnHashResult queryTxnHashResult = queryTran(response_txnhash);
+      //       if (queryTxnHashResult.status == 1) {
+      //         //交易成功
+      //         var msg = queryTxnHashResult.successInfo;
+      //         if (msg.confirm >= 1) {
+      //           print('[${DateTime.now()}] 交易成功');
+      //           isQuery = false;
+      //           // return msg;
+      //         }
+      //       }
+      //     } else {
+      //       print('Error: request failed, code=${response_txnhash.statusCode}');
+      //     }
+      //   }
+      // }
+    }
+  }
 }
 
 Future<QueryTxnHashResult> getQueryTxnHashResult(String txnHash) async {
