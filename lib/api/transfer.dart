@@ -256,7 +256,6 @@ Future<QueryTxnHashResult> getQueryTxnHashResult(String txnHash) async {
 
 MakeSheetResult getTxnHash(responseTxnBytes) {
   String command = getCommandStrFromBytes(responseTxnBytes);
-// List<int> txn_response_payload = response_txn_bytes.sublist(24);
   if (command == UdpReject.command) {
     UdpReject msg3 = parseUdpReject(responseTxnBytes);
     print('Error:${msg3.message}');
@@ -302,7 +301,6 @@ MakeSheet prepare_txn1_(pay_to, ext_in, submit, scan_count, min_utxo, max_utxo,
     value: 0,
     address: gPseudoWallet.pubAddr,
     // address: '13h3T4vG26D16WFXgSfQXDLkgWNgoktBxL2qcYz1bBCA85NuAeKWJNh',
-    // address: '13TtvKn5cwNhdxfXSbz1MewRnTEPB534rudq41LnRP1T9A4TJmjAKhJ',
   );
   pay_from.add(pay_from1);
 

@@ -6,7 +6,6 @@ import './model/jsonEntity.dart';
 import 'transfer.dart';
 
 String main() {
-  //
   getQueryTxnHashResult(
           '2a70905f28f2cb8ef6f9a4d1a055709df733fd5cf350a8038a973cd409f74f37')
       .then((res) {
