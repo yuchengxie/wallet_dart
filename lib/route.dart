@@ -6,6 +6,8 @@ import 'package:nbc_wallet/pages/tran/scanfcode.dart';
 import 'package:nbc_wallet/pages/tran/transferpage.dart';
 import 'package:nbc_wallet/pages/tran/txndeatails.dart';
 import 'package:nbc_wallet/pages/tabs.dart';
+import 'pages/miner/MinerPage.dart';
+import 'pages/tabpages/PersonalPage.dart';
 
 final _routes = {
   '/': (context) => Tabs(),
@@ -15,6 +17,8 @@ final _routes = {
   '/qrcode': (context) => QRCodePage(),
   '/scanfcode':(context)=>ScanfCodePage(),
   '/blue':(context)=>BluePage(),
+  '/person':(context)=>PersonalPage(),
+  '/miner':(context)=>MinerPage(),
 };
 
 var onGenerateRoute = (RouteSettings settings) {

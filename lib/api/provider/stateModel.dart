@@ -24,7 +24,8 @@ class StateModel with ChangeNotifier {
   }
 
   _onEvent(Object event) {
-    _blueState=event;
+    Map dic=event;
+    _blueState=dic["state"];
   }
 
   _onError(Object error) {

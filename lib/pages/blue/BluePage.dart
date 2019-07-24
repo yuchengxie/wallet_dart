@@ -110,7 +110,7 @@ class _BluePageState extends State<BluePage> {
     bleNameController = TextEditingController();
     pinCodeController = TextEditingController();
     pinCodeVerifyController = TextEditingController();
-    bleNameController.text = "BLESIM111111";
+    bleNameController.text = "BLESIM313131";
     pinCodeController.text = "123456";
     pinCodeVerifyController.text = "000000";
     this._connectState = '蓝牙SIM卡';
@@ -207,12 +207,12 @@ class _BluePageState extends State<BluePage> {
             SizedBox(
               height: 25,
             ),
-            MOutlineButton(
-              title: "选择应用",
-              onPressed: () {
-                this._selectApp(appSelectID);
-              },
-            ),
+            // MOutlineButton(
+            //   title: "选择应用",
+            //   onPressed: () {
+            //     this._selectApp(appSelectID);
+            //   },
+            // ),
             TextField(
               controller: pinCodeVerifyController,
               decoration: InputDecoration(
@@ -238,18 +238,18 @@ class _BluePageState extends State<BluePage> {
                 this._getPubAddr();
               },
             ),
-            MOutlineButton(
-              title: "pubkey",
-              onPressed: () {
-                this._getPubKey();
-              },
-            ),
-            MOutlineButton(
-              title: "pubkeyhash",
-              onPressed: () {
-                this._getPubKeyHash();
-              },
-            ),
+            // MOutlineButton(
+            //   title: "pubkey",
+            //   onPressed: () {
+            //     this._getPubKey();
+            //   },
+            // ),
+            // MOutlineButton(
+            //   title: "pubkeyhash",
+            //   onPressed: () {
+            //     this._getPubKeyHash();
+            //   },
+            // ),
           ],
         ),
       ),

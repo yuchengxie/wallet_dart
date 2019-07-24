@@ -13,16 +13,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // return MultiProvider(
-    //   providers: [
-    //     // Provider<>
-    //   ],
-    //   child: MaterialApp(
-    //     home: Tab(),
-    //     initialRoute: '/',
-    //     // onGenerateRoute: onGenerateRoute,
-    //   ),
-    // );
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(builder: (_) => StateModel()),

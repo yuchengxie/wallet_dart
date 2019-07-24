@@ -12,7 +12,8 @@ const SUCCESS = 1;
 // const FAILED = 0;
 // const TEENOTREADY = -1;
 PseudoWallet gPseudoWallet = PseudoWallet();
-String appSelectID = "D196300077130010000000020101";
+// String appSelectID = "D196300077130010000000020101";
+String appSelectID = "00A404000ED196300077130010000000020101";
 MethodChannel methodChannel = MethodChannel('hzf.bluetooth');
 EventChannel eventChannel = EventChannel('hzf.bluetoothState');
 //test
@@ -45,6 +46,7 @@ Future<String> getPubKeyHash() async {
 Future<void> connectBlueTooth(String bleName, String pinCode) async {
   try {
     await methodChannel.invokeMethod('connectBlueTooth', [bleName, pinCode]);
+    // await methodChannel.invokeMethod('connectBlueTooth',"{'bleName':$bleName,'pinCode':$pinCode}");
   } on PlatformException {}
 }
 

@@ -89,8 +89,8 @@ class _TransferComponentState extends State<TransferComponent> {
   @override
   void dispose() {
     super.dispose();
-    _timer?.cancel();
-    _timer = null;
+    // _timer?.cancel();
+    // _timer = null;
   }
 
   @override
@@ -291,25 +291,25 @@ class _TransferComponentState extends State<TransferComponent> {
               ],
             ),
             SizedBox(height: 20,),
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: Container(
-                    height: 40,
-                    child: RaisedButton(
-                      color: Colors.cyan,
-                      textColor: Colors.white,
-                      child: Text('查询(测试)'),
-                      onPressed: () {
-                        getQueryTxnHashResult(
-                            '10bdd17d6748d6401a74258b71fb4be24e30059aa8847cda953e0dbef15dd2e5');
-                      },
-                      // onPressed: _isDisableButton ? _transferAction : null,
-                    ),
-                  ),
-                )
-              ],
-            ),
+            // Row(
+            //   children: <Widget>[
+            //     Expanded(
+            //       child: Container(
+            //         height: 40,
+            //         child: RaisedButton(
+            //           color: Colors.cyan,
+            //           textColor: Colors.white,
+            //           child: Text('查询(测试)'),
+            //           onPressed: () {
+            //             getQueryTxnHashResult(
+            //                 '10bdd17d6748d6401a74258b71fb4be24e30059aa8847cda953e0dbef15dd2e5');
+            //           },
+            //           // onPressed: _isDisableButton ? _transferAction : null,
+            //         ),
+            //       ),
+            //     )
+            //   ],
+            // ),
           ],
         ));
   }

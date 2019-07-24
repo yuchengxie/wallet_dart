@@ -112,17 +112,6 @@ class PersonalPage extends StatelessWidget {
           ListTile(
             leading: Icon(Icons.system_update_alt, size: 30),
             title: Text('系统设置'),
-            // subtitle: Text('切换主题，夜间模式，白天模式'),
-            trailing: Icon(Icons.keyboard_arrow_right),
-            onTap: () {},
-          ),
-          Divider(
-            height: 1,
-          ),
-          ListTile(
-            leading: Icon(Icons.person, size: 25),
-            title: Text('个人中心'),
-            // subtitle: Text('切换主题，夜间模式，白天模式'),
             trailing: Icon(Icons.keyboard_arrow_right),
             onTap: () {},
           ),
@@ -136,6 +125,18 @@ class PersonalPage extends StatelessWidget {
             trailing: Icon(Icons.keyboard_arrow_right),
             onTap: () {
               Navigator.pushNamed(context, '/blue');
+            },
+          ),
+          Divider(
+            height: 1,
+          ),
+           ListTile(
+            leading: Icon(Icons.pan_tool, size: 25),
+            title: Text('蓝牙挖矿'),
+            subtitle: Text('SIM卡蓝牙挖矿，请保持蓝牙连接'),
+            trailing: Icon(Icons.keyboard_arrow_right),
+            onTap: () {
+              Navigator.pushNamed(context, '/miner');
             },
           ),
           Divider(
